@@ -1,0 +1,3 @@
+[submodule "turbobadger"]
+	path = turbobadger
+	url = https://github.com/fruxo/turbobadger.git
