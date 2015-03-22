@@ -10,11 +10,23 @@ if (NOT FIPS_IMPORT)
     fips_project(fips-turbobadger)
 endif()
 
+option(TB_ENABLE_RTTI "Do not disable RTTI" OFF)
+option(TB_DISABLE_SAMPLES "Do not add samples to the build/project" OFF)
+
+if (NOT FIPS_EXCEPTIONS)
+    set(TB_NO_EXCEPTIONS "-fno-exceptions")
+endif()
+
+if (NOT TB_ENABLE_RTTI)
+    set(TB_NO_RTTI "-fno-rtti")
+endif()
+
 if (FIPS_WINDOWS)
     add_definitions(-DGLFW_EXPOSE_NATIVE_WIN32)
     add_definitions(-DGLFW_EXPOSE_NATIVE_WGL)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
+    add_definitions(-DUSE_CURRENT_DIRECTORY)
 elseif (FIPS_LINUX)
 elseif (FIPS_MACOS)
     add_definitions(-DMACOSX)
@@ -23,6 +35,44 @@ endif()
 
 fips_begin_lib(turbobadger)
     include_directories(turbobadger/src/tb)
+
+    fips_dir(turbobadger/src/tb/animation)
+    fips_files(
+        tb_animation_utils.h
+        tb_animation.cpp
+        tb_widget_animation.h
+        tb_animation.h
+        tb_widget_animation.cpp
+    )
+    fips_dir(turbobadger/src/tb/utf8)
+    fips_files(
+        utf8.cpp
+        utf8.h
+    )
+    fips_dir(turbobadger/src/tb/renderers)
+    fips_files(
+        tb_renderer_gl.cpp
+        tb_renderer_batcher.cpp
+        tb_renderer_gl.h
+        tb_renderer_batcher.h
+    )
+    fips_dir(turbobadger/src/tb/thirdparty)
+    fips_files(
+        stb_image.h
+        stb_truetype.h
+    )
+    fips_dir(turbobadger/src/tb/parser)
+    fips_files(
+        tb_parser.h
+        tb_parser.cpp
+    )
+    fips_dir(turbobadger/src/tb/image)
+    fips_files(
+        tb_image_manager.cpp
+        tb_image_widget.cpp
+        tb_image_widget.h
+        tb_image_manager.h
+    )
     fips_dir(turbobadger/src/tb)
     fips_files(
         tb_system_linux.cpp
@@ -38,11 +88,6 @@ fips_begin_lib(turbobadger)
         tb_window.cpp
         tb_renderer.h
         tb_scroll_container.h
-        animation/tb_animation_utils.h
-        animation/tb_animation.cpp
-        animation/tb_widget_animation.h
-        animation/tb_animation.h
-        animation/tb_widget_animation.cpp
         tb_font_renderer.h
         tb_window.h
         tb_popup_window.h
@@ -53,8 +98,6 @@ fips_begin_lib(turbobadger)
         tb_clipboard_win.cpp
         tb_linklist.h
         tb_inline_select.h
-        utf8/utf8.cpp
-        utf8/utf8.h
         tb_select.cpp
         tb_dimension.h
         tb_skin.cpp
@@ -64,10 +107,6 @@ fips_begin_lib(turbobadger)
         tb_inline_select.cpp
         tb_scroller.cpp
         tb_font_renderer_stb.cpp
-        renderers/tb_renderer_gl.cpp
-        renderers/tb_renderer_batcher.cpp
-        renderers/tb_renderer_gl.h
-        renderers/tb_renderer_batcher.h
         tb_message_window.h
         tb_id.cpp
         tb_select_item.cpp
@@ -109,8 +148,6 @@ fips_begin_lib(turbobadger)
         tb_language.cpp
         tb_toggle_container.h
         tb_clipboard_dummy.cpp
-        thirdparty/stb_image.h
-        thirdparty/stb_truetype.h
         tb_tempbuffer.cpp
         tb_menu_window.h
         tb_geometry.h
@@ -131,8 +168,6 @@ fips_begin_lib(turbobadger)
         tb_list.h
         tb_widgets_reader.cpp
         tb_style_edit.cpp
-        parser/tb_parser.h
-        parser/tb_parser.cpp
         tb_font_renderer.cpp
         tb_str.cpp
         tb_tab_container.cpp
@@ -143,10 +178,6 @@ fips_begin_lib(turbobadger)
         tb_widget_value.cpp
         tb_skin_util.cpp
         tb_color.h
-        image/tb_image_manager.cpp
-        image/tb_image_widget.cpp
-        image/tb_image_widget.h
-        image/tb_image_manager.h
         tb_widget_skin_condition_context.cpp
         tb_font_renderer_tbbf.cpp
         tb_id.h
@@ -173,58 +204,71 @@ fips_begin_lib(turbobadger)
 fips_end_lib()
 
 
-if (FIPS_MACOS OR FIPS_LINUX OR FIPS_WINDOWS)
-    fips_begin_app(demo cmdline)
-        include_directories(turbobadger/Demo)
-        include_directories(turbobadger/Demo/demo01)
-        include_directories(turbobadger/Demo/platform)
-        fips_dir(turbobadger/Demo/platform)
-        fips_files(
-            Application.cpp
-            Application.h
-            glfw_extra.h
-            glfw_extra_linux.cpp
-            glfw_extra_win.cpp
-            port_glfw.cpp
-        )
-        fips_dir(turbobadger/Demo/demo01)
-        fips_files(
-            Demo.h
-            Demo01.cpp
-            ListWindow.cpp
-            ListWindow.h
-            ResourceEditWindow.cpp
-            ResourceEditWindow.h
-        )
-        fips_deps(turbobadger GLEW glfw3)
+if (NOT TB_DISABLE_SAMPLES)
+    if (FIPS_MACOS OR FIPS_LINUX OR FIPS_WINDOWS)
+        fips_begin_app(demo windowed)
+            include_directories(turbobadger/Demo)
+            include_directories(turbobadger/Demo/demo01)
+            include_directories(turbobadger/Demo/platform)
+            fips_dir(turbobadger/Demo/platform)
+            fips_files(
+                Application.cpp
+                Application.h
+                glfw_extra.h
+                glfw_extra_linux.cpp
+                glfw_extra_win.cpp
+                port_glfw.cpp
+            )
+            fips_dir(turbobadger/Demo/demo01)
+            fips_files(
+                Demo.h
+                Demo01.cpp
+                ListWindow.cpp
+                ListWindow.h
+                ResourceEditWindow.cpp
+                ResourceEditWindow.h
+            )
+            fips_deps(turbobadger glfw3)
 
-        if (FIPS_WINDOWS)
-            fips_libs(opengl32 winmm)
-        endif()
+            if (FIPS_WINDOWS)
+                fips_libs(opengl32 winmm)
+            endif()
 
-        if (FIPS_LINUX)
-            fips_libs(X11 Xrandr Xi Xinerama Xxf86vm Xcursor GL m)
-        endif()
+            if (FIPS_LINUX)
+                fips_libs(X11 Xrandr Xi Xinerama Xxf86vm Xcursor GL m)
+            endif()
 
-        if (FIPS_MACOS)
-            fips_libs(m)
-        endif()
-    fips_end_app()
+            if (FIPS_MACOS)
+                fips_libs(m)
+            endif()
+        fips_end_app()
+    endif()
+    if (FIPS_ANDROID)
+        # demo android
+    endif()
+
+    if (FIPS_CLANG)
+        set_target_properties(demo PROPERTIES COMPILE_FLAGS "${TB_NO_EXCEPTIONS} ${TB_NO_RTTI} -Wall -Wextra -Wno-unused-parameter -Wno-unused-function")
+    elseif(FIPS_GCC)
+        set_target_properties(demo PROPERTIES COMPILE_FLAGS "${TB_NO_EXCEPTIONS} ${TB_NO_RTTI} -Wall -Wextra -Wno-unused-parameter -Wno-unused-function")
+    endif()
 endif()
 
-if (FIPS_ANDROID)
-    # demo android
-endif()
 
 if (FIPS_CLANG)
-    set_target_properties(turbobadger PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti -Wall -Wextra -Wno-unused-parameter -Wno-unused-function")
-    set_target_properties(demo PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti -Wall -Wextra -Wno-unused-parameter -Wno-unused-function")
+    set_target_properties(turbobadger PROPERTIES COMPILE_FLAGS "${TB_NO_EXCEPTIONS} ${TB_NO_RTTI} -Wall -Wextra -Wno-unused-parameter -Wno-unused-function")
 elseif(FIPS_GCC)
-    set_target_properties(turbobadger PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti -Wall -Wextra -Wno-unused-parameter -Wno-unused-function")
-    set_target_properties(demo PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti -Wall -Wextra -Wno-unused-parameter -Wno-unused-function")
+    set_target_properties(turbobadger PROPERTIES COMPILE_FLAGS "${TB_NO_EXCEPTIONS} ${TB_NO_RTTI} -Wall -Wextra -Wno-unused-parameter -Wno-unused-function")
 elseif(FIPS_MSVC)
-    string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # -fno-exceptions
-    string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # -fno-rtti
+    if (NOT FIPS_EXCEPTIONS)
+        string(REPLACE "/EHsc" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # -fno-exceptions
+    endif()
+
+    if (NOT TB_ENABLE_RTTI)
+        string(REPLACE "/GR" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # -fno-rtti
+    endif()
+
+    string(REPLACE "/WX" "/WX-" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}) # disable warning as error due GCC pragmas
 endif()
 
 if (NOT FIPS_IMPORT)
