@@ -11,7 +11,6 @@ if (NOT FIPS_IMPORT)
 endif()
 
 option(TB_ENABLE_RTTI "Do not disable RTTI" OFF)
-option(TB_DISABLE_SAMPLES "Do not add samples to the build/project" OFF)
 
 if (NOT FIPS_EXCEPTIONS)
     set(TB_NO_EXCEPTIONS "-fno-exceptions")
@@ -204,7 +203,7 @@ fips_begin_lib(turbobadger)
 fips_end_lib()
 
 
-if (NOT TB_DISABLE_SAMPLES)
+if (NOT FIPS_IMPORT)
     if (FIPS_MACOS OR FIPS_LINUX OR FIPS_WINDOWS)
         fips_begin_app(demo windowed)
             include_directories(turbobadger/Demo)
