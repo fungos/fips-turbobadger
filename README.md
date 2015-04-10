@@ -1,7 +1,7 @@
 fips-turbobadger
 =========
 
-fipsified nanovg (https://github.com/fruxo/turbobadger)
+fipsified turbobadger (https://github.com/fruxo/turbobadger)
 
 fips build system: https://github.com/floooh/fips
 
